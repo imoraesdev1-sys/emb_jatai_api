@@ -1,0 +1,19 @@
+docker run -d \
+  -p 8000:8000 \
+  -e DATABASE_URL="postgresql://usuario:senha@servidor:5432/meubanco" \
+  --name fastapi-container \
+  fastapi-app
+
+
+  docker build -t emb-jti-api .
+  
+  docker run --name api-container -p 8000:8000 emb-jti-api
+  
+  docker rm api-container 
+
+  docker rmi emb-jti-api
+
+  docker push ricardolimati/emb-jti-api:latest
+
+
+  
