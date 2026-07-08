@@ -6,6 +6,7 @@ docker run -d \
 
 
   docker build -t emb-jti-api .
+
   
   docker run --name api-container -p 8000:8000 emb-jti-api
   
@@ -14,6 +15,15 @@ docker run -d \
   docker rmi emb-jti-api
 
   docker push ricardolimati/emb-jti-api:latest
-
-
   
+  ##Comando com versionamento:
+   
+  docker build -t emb-jti-api:1.0 .
+
+  docker tag emb-jti-api:1.0 ricardolimati/emb-jti-api:1.0
+
+  docker push ricardolimati/emb-jti-api:1.0 
+
+
+
+  poetry run uvicorn main:app --reload
