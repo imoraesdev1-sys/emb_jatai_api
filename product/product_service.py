@@ -1,4 +1,4 @@
-from product_repository import ProductRepository
+from product.product_repository import ProductRepository
 
 
 class ProductService:

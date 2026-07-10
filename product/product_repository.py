@@ -1,6 +1,6 @@
 from sqlalchemy.exc import DBAPIError, SQLAlchemyError
 from sqlalchemy.orm import Session
-from product_model import Products
+from product.product_model import Products
 from sqlalchemy import func, select
 from sqlalchemy import text
 class ProductRepository:

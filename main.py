@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from product_controller import router as product_router
+from product.product_controller import router as product_router
+from api_rp.auth_controller import router as auth_router
 
 app = app = FastAPI(
     title="Consulta Produtos Embalagem Jatai API",
@@ -12,3 +13,4 @@ def root():
     return {"message": "Olá, FastAPI!"}
 
 app.include_router(product_router)
+app.include_router(auth_router)
