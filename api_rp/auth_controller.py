@@ -12,7 +12,7 @@ router=APIRouter(
 )
 
 
-@router.get("/auth")
+@router.post("/auth")
 def auth_login(login:AuthModel):
     service=AuthServiceApi()
     return service.login_api(login.user, login.password)

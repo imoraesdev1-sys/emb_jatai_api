@@ -1,16 +1,25 @@
+docker run -d `
+  -p 8000:8000 `
+  -p 5678:5678 `
+  -e DATABASE_URL="postgresql+psycopg://n8n:Ricardo%400511@painel.devia.store:5432/producao" `
+  -e API_URL="http://177.73.91.225:9000" `
+  --name fastapi-container `
+  emb-jti-api
+
+
 docker run -d \
   -p 8000:8000 \
-  -e DATABASE_URL="postgresql://usuario:senha@servidor:5432/meubanco" \
+  -e DATABASE_URL="" \
+  -e API_URL="" \
   --name fastapi-container \
   fastapi-app
-
 
   docker build -t emb-jti-api .
 
   
   docker run --name api-container -p 8000:8000 emb-jti-api
   
-  docker rm api-container 
+  docker rm fastapi-container 
 
   docker rmi emb-jti-api
 
