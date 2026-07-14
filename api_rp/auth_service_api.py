@@ -71,41 +71,58 @@ class AuthServiceApi:
 
         return data["produtos"]
 
-        # return data
+
 
 
 
 
     def compare_products(self, db: Session):
 
-        produtos = self.get_product(db)
-
+        ultimo_codigo = 0  
         produtos_inseridos = []
-        print("produtos:",produtos)
 
         try:
-            for item in produtos:
+            while True:
+                if ultimo_codigo == 0: 
+                    produtos = self.get_product(db)
+                
+                produtos = self.get_product(db, ultimo_codigo)
 
-                produto = db.execute(
-                    select(Products).where(
-                        Products.codigo == item["codigo"]
-                    )
-                ).scalar_one_or_none()
+                
 
-                if produto is None:
+                if not produtos:
+                    break
 
-                    produto = Products(
-                        codigo=item["codigo"],
-                        descricao=item["descricao"],
-                        unidade=item["embalagem"],
-                        marca=item["marca"],
-                        codigo_grupo=int(item["grupoCodigo"])  
-                    )
+                for item in produtos:
 
-                    db.add(produto)
-                    produtos_inseridos.append(produto)
+                    produto = db.execute(
+                        select(Products).where(
+                            Products.codigo == item["codigo"]
+                        )
+                    ).scalar_one_or_none()
 
-            db.commit()
+                    if produto is None:
+
+                        produto = Products(
+                            codigo=item["codigo"],
+                            descricao=item["descricao"],
+                            unidade=item["embalagem"],
+                            marca=item["marca"],
+                            codigo_grupo=int(item["grupoCodigo"])
+                        )
+
+                        db.add(produto)
+                        produtos_inseridos.append(produto)
+
+                db.commit()
+
+                # Atualiza para buscar o próximo lote
+                ultimo_codigo = produtos[-1]["codigo"]
+                print("ultimo codigo : ",ultimo_codigo)
+
+                # Se a API retornar menos de 100, acabou
+                if len(produtos) < 100:
+                    break
 
             for produto in produtos_inseridos:
                 db.refresh(produto)
@@ -117,11 +134,7 @@ class AuthServiceApi:
             raise
     
         
-    """
-    Select no banco interno com lista de codigos trazidos da api do RP, conferir informações banco e da api. 
-    lista_produtos_api=[]
-    lista_produtos_db=[]
-    """
+ 
 
 
 
