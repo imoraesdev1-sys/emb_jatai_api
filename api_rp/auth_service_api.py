@@ -116,11 +116,11 @@ class AuthServiceApi:
 
                 db.commit()
 
-                # Atualiza para buscar o próximo lote
+         
                 ultimo_codigo = produtos[-1]["codigo"]
                 print("ultimo codigo : ",ultimo_codigo)
 
-                # Se a API retornar menos de 100, acabou
+          
                 if len(produtos) < 100:
                     break
 

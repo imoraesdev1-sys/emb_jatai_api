@@ -10,6 +10,7 @@ class ProductsBaseModel(BaseModel):
     id:int 
     code:int
     description:str 
+    marca:str
     ativo:bool
 
 

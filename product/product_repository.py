@@ -96,7 +96,7 @@ class ProductRepository:
                 sql,
                 {"busca": description}
             ).mappings().all()
-            print(len(result))
+            
             if not result:
                 raise ValueError("Não encontrei produtos com esse nome.")
 
@@ -105,10 +105,13 @@ class ProductRepository:
                     "id": product["id"],
                     "codigo": product["codigo"],
                     "descricao": product["descricao"],
-                    "valor": float(product["valor"]),
+                    "valor": float(product["valor"]) if product["valor"] is not None else None,
+                    "marca":product["marca"],
                     "unidade": product["unidade"],
                 }
+            
                 for product in result
+            
             ]                 
             
         except DBAPIError as e:
