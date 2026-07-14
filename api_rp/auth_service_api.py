@@ -1,13 +1,15 @@
-import os
-import requests
 
+import os
+from fastapi import HTTPException
+import requests
+from sqlalchemy.orm import Session
 from api_rp.token_api import TokenApi
 from sqlalchemy import select, func
 
 from product.product_model import Products
-from database import SessionLocal
 
-db = SessionLocal()
+
+
 
 API_URL = os.getenv("API_URL")
 
@@ -40,56 +42,79 @@ class AuthServiceApi:
         return data["response"]["token"]
     
 
-    def get_product(self, code: int | None = None):
-        """
-        O intuito é buscar o menor numero possivel para puxar na api a listagem de produtos.
-        """
-        if code == None:
-            menor_codigo =db.execute(
-            select(func.min(Products.codigo))
+    def get_product(self, db: Session, code: int | None = None):
+
+        if code is None:
+            menor_codigo = db.execute(
+                select(func.min(Products.codigo))
             ).scalar_one()
-            print(menor_codigo)
         else:
-            menor_codigo=code
-        
-        # traz 100 produtos.
+            menor_codigo = code
 
         response = requests.get(
-        url=f"{API_URL}/v1.1/produto/listaprodutos/{menor_codigo}",
-        headers={
-            "Content-Type": "application/json", 
-            "token":self.service_token.token
-        }
+            url=f"{API_URL}/v1.1/produto/listaprodutos/{menor_codigo}",
+            headers={
+                "Content-Type": "application/json",
+                "token": self.service_token.token
+            }
         )
+
+        # response.raise_for_status()
         data=response.json()
-        data=data["produtos"]
 
-        return data
+        
+        if "error" in data:
+            raise HTTPException(
+                status_code=401,
+                detail=data["error"]
+            )
+
+        return data["produtos"]
+
+        # return data
 
 
 
 
-    def compare_products(self,produtos):
+    def compare_products(self, db: Session):
 
-        for item in produtos:
+        produtos = self.get_product(db)
 
-            stmt = select(Products).where(Products.codigo == item.codigo)
+        produtos_inseridos = []
+        print("produtos:",produtos)
 
-            produto = db.execute(stmt).scalar_one_or_none()
+        try:
+            for item in produtos:
 
-            if produto is None:
-                produto = Products(
-                    codigo=item.codigo,
-                    descricao=item.descricao,
-                    valor=item.valor,
-                    unidade=item.unidade
-                )
+                produto = db.execute(
+                    select(Products).where(
+                        Products.codigo == item["codigo"]
+                    )
+                ).scalar_one_or_none()
 
-                db.add(produto)
-                db.commit()
+                if produto is None:
+
+                    produto = Products(
+                        codigo=item["codigo"],
+                        descricao=item["descricao"],
+                        unidade=item["embalagem"],
+                        marca=item["marca"],
+                        codigo_grupo=int(item["grupoCodigo"])  
+                    )
+
+                    db.add(produto)
+                    produtos_inseridos.append(produto)
+
+            db.commit()
+
+            for produto in produtos_inseridos:
                 db.refresh(produto)
 
-        return produto
+            return produtos_inseridos
+
+        except Exception:
+            db.rollback()
+            raise
     
         
     """

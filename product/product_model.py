@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel
-from sqlalchemy import Boolean, Column, Float, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, Float, Integer, String
 
 from database import Base
 
@@ -23,3 +23,5 @@ class Products(Base):
     ativo= Column(Boolean, default=True )
     valor=Column(Float)
     unidade=Column(String)
+    marca=Column(String)
+    codigo_grupo = Column(BigInteger)
