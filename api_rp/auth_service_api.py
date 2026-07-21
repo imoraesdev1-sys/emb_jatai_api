@@ -12,6 +12,7 @@ from product.product_model import Products
 
 
 API_URL = os.getenv("API_URL")
+CNPJ= os.getenv("CNPJ")
 
 class AuthServiceApi: 
 
@@ -44,6 +45,7 @@ class AuthServiceApi:
 
     def get_product(self, db: Session, code: int | None = None):
 
+        token = self.service_token.get_token()
         if code is None:
             menor_codigo = db.execute(
                 select(func.min(Products.codigo))
@@ -55,11 +57,11 @@ class AuthServiceApi:
             url=f"{API_URL}/v1.1/produto/listaprodutos/{menor_codigo}",
             headers={
                 "Content-Type": "application/json",
-                "token": self.service_token.token
+                "token": token
             }
         )
 
-        # response.raise_for_status()
+       
         data=response.json()
 
         
@@ -87,8 +89,6 @@ class AuthServiceApi:
                     produtos = self.get_product(db)
                 
                 produtos = self.get_product(db, ultimo_codigo)
-
-                
 
                 if not produtos:
                     break
@@ -133,17 +133,55 @@ class AuthServiceApi:
             db.rollback()
             raise
     
+    
         
- 
+    
+    
+    def price_product(self,code, db:Session):
+
+        token = self.service_token.get_token()
+        produto_inserido=[]
+
+        response = requests.get(
+            url=f"{API_URL}/v3.2/produtounidade/{code}/unidade/{CNPJ}/detalhado/estoque",
+            headers={
+                "Content-Type": "application/json",
+                "token": token
+            }
+        )
 
 
+        data=response.json()
+        
+        if "error" in data:
+            raise HTTPException(
+                status_code=401,
+                detail=data["error"]
+            )
+        
+        item = data["response"]["produtos"][0]
 
-    """ 
-        Codigo existe na base ? 
-        Atualiza banco de dados
-        Codigo não existe? 
-        Insert banco de dados
+        produto = db.execute(
+            select(Products).where(Products.codigo == item["Codigo"])
+        ).scalar_one_or_none()
 
-    """
-            
+        if produto:
+            produto.descricao = item["Descricao"]
+            produto.valor = item["Preco"]
+            produto.ativo=item["Ativo"]
+        else:
+            produto = Products(
+                codigo=item["Codigo"],
+                descricao=item["Descricao"],
+                valor=item["Preco"],
+                ativo=item["Ativo"]
+            )
+            db.add(produto)
+
+        db.commit()
+        db.refresh(produto)
+
+        return produto
+
+
 

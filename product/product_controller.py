@@ -29,3 +29,9 @@ def get_description_product(description:str,db: Session = Depends(get_db)):
    repository=ProductRepository(db)
    service=ProductService(repository)
    return service.get_description_product(description)
+
+@router.get("/product/update_price")
+def update_price(db: Session = Depends(get_db)):
+   repository=ProductRepository(db)
+   service=ProductService(repository)
+   return service.update_price_none(db)

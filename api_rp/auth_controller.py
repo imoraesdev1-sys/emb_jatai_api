@@ -54,3 +54,10 @@ db: Session = Depends(get_db)
     service = AuthServiceApi()
     return service.compare_products(db)
 
+
+@router.get("/product/price")
+def price_product(
+    code, 
+    db:Session=Depends(get_db)): 
+    service= AuthServiceApi()
+    return service.price_product(code,db)

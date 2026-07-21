@@ -1,3 +1,7 @@
+from sqlalchemy import select
+
+from api_rp.auth_service_api import AuthServiceApi
+from product.product_model import Products
 from product.product_repository import ProductRepository
 
 
@@ -23,3 +27,24 @@ class ProductService:
     def get_description_product(self,description:str):
         product_found= self.repository.description_product(description)
         return product_found
+    
+
+    def update_price_none(self, db):
+        service_api= AuthServiceApi()
+
+        produtos = db.execute(
+            select(Products)
+            .where(Products.valor.is_(None))
+        ).scalars().all()
+
+        codigos_processados = []
+
+        for produto in produtos:
+
+            service_api.price_product(produto.codigo, db)
+            codigos_processados.append(produto.codigo)
+
+        return {
+            "quantidade": len(codigos_processados),
+            "codigos": codigos_processados
+        }
