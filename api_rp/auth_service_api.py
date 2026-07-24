@@ -16,21 +16,18 @@ CNPJ= os.getenv("CNPJ")
 
 class AuthServiceApi: 
 
-    service_token= TokenApi()
-
     def __init__(self):
         self.session = requests.Session()
+        self.token_service = TokenApi()
 
-    def login_api(self,user: str, password: str):
-        response = requests.post(
-        url=f"{API_URL}/v1.1/auth",
-        json={
-            "usuario": user,
-            "senha": password
-        },
-        headers={
-            "Content-Type": "application/json"
-        }
+    def login_api(self, user: str, password: str):
+
+        response = self.session.post(
+            url=f"{API_URL}/v1.1/auth",
+            json={
+                "usuario": user,
+                "senha": password
+            }
         )
 
         response.raise_for_status()
@@ -38,18 +35,18 @@ class AuthServiceApi:
         data = response.json()
         print(data)
 
-        self.service_token._authenticate(data)
+        self.token_service.authenticate(data)
 
         return data["response"]["token"]
     
 
     def get_product(self, db: Session, code: int | None = None):
 
-        token = self.service_token.get_token()
+        token = self.token_service.get_token()
         if code is None:
             menor_codigo = db.execute(
                 select(func.min(Products.codigo))
-            ).scalar_one()
+            ).scalar()
         else:
             menor_codigo = code
 
@@ -99,7 +96,7 @@ class AuthServiceApi:
                         select(Products).where(
                             Products.codigo == item["codigo"]
                         )
-                    ).scalar_one_or_none()
+                    ).scalar()
 
                     if produto is None:
 
@@ -139,16 +136,26 @@ class AuthServiceApi:
     
     def price_product(self,code, db:Session):
 
-        token = self.service_token.get_token()
-        produto_inserido=[]
+        token = self.token_service.get_token()
 
-        response = requests.get(
+        response = self.session.get(
             url=f"{API_URL}/v3.2/produtounidade/{code}/unidade/{CNPJ}/detalhado/estoque",
             headers={
                 "Content-Type": "application/json",
                 "token": token
             }
         )
+
+        if response.status_code == 401:
+            token = self.token_service.get_token(force_refresh=True)
+
+            response = self.session.get(
+                url=f"{API_URL}/v3.2/produtounidade/{code}/unidade/{CNPJ}/detalhado/estoque",
+                headers={
+                    "Content-Type": "application/json",
+                    "token": token
+                }
+            )
 
 
         data=response.json()
@@ -163,7 +170,7 @@ class AuthServiceApi:
 
         produto = db.execute(
             select(Products).where(Products.codigo == item["Codigo"])
-        ).scalar_one_or_none()
+        ).scalar()
 
         if produto:
             produto.descricao = item["Descricao"]

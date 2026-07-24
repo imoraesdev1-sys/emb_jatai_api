@@ -32,10 +32,15 @@ class ProductService:
     def update_price_none(self, db):
         service_api= AuthServiceApi()
 
-        produtos = db.execute(
+        produtos = (
+        db.execute(
             select(Products)
             .where(Products.valor.is_(None))
-        ).scalars().all()
+            .limit(100)
+        )
+        .scalars()
+        .all()
+    )
 
         codigos_processados = []
 
